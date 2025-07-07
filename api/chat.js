@@ -17,7 +17,7 @@ export default async function handler(req, res) {
         id: "pmpt_6869c27cfbcc8194a9fbdcd2313fb2c50abe7a7543a70057",
         version: "2"
       },
-      input: { message }
+      input: message  // ✅ Fixed: input must be string, not object
     });
 
     return res.status(200).json({ reply: response.result });
