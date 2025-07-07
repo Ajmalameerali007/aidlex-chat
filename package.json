@@ -1,0 +1,11 @@
+{
+  "name": "aidlex-chat",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "echo 'Static frontend project with serverless OpenAI API'"
+  },
+  "dependencies": {
+    "openai": "^4.25.0"
+  }
+}

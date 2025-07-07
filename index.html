@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIDLEX</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+  <style>
+    body {
+      background-color: #0f0f0f;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+    }
+    .fade-scale {
+      opacity: 0;
+      transform: scale(0.95);
+      animation: fadeInScale 1.5s ease-out forwards;
+    }
+    @keyframes fadeInScale {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    .glow {
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+    .btn-glow {
+      transition: all 0.3s ease;
+    }
+    .btn-glow:hover {
+      background-color: white !important;
+      color: #0f0f0f !important;
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+    }
+    #chat-box {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body class="relative flex flex-col items-center justify-center min-h-screen text-white">
+  <!-- Particle Background -->
+  <div id="tsparticles" class="absolute inset-0 -z-10"></div>
+
+  <!-- Welcome Section -->
+  <div id="welcome-section" class="text-center fade-scale px-4">
+    <h1 class="text-5xl md:text-7xl font-extrabold glow tracking-widest">AIDLEX</h1>
+    <p class="mt-4 text-gray-400 text-base md:text-xl font-light">
+      AI-Powered Legal Intelligence
+    </p>
+    <!-- Login/Sign Up -->
+    <div class="mt-10">
+      <div class="flex justify-center gap-6 flex-wrap">
+        <a href="/login" class="btn-glow bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium text-base backdrop-blur hover:backdrop-blur-xl">Login</a>
+        <a href="/signup" class="btn-glow bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium text-base backdrop-blur hover:backdrop-blur-xl">Sign Up</a>
+      </div>
+      <!-- Continue as Guest Button -->
+      <div id="guest-button" class="mt-6">
+        <button onclick="showGuestForm()" class="btn-glow bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium text-base backdrop-blur hover:backdrop-blur-xl">
+          Continue as Guest
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest Form Section -->
+  <div id="guest-form" class="hidden mt-10 fade-scale w-full max-w-md px-6 text-white">
+    <div class="space-y-4">
+      <input type="text" placeholder="Full Name" id="guest-name" class="w-full p-3 rounded bg-white/10 text-white border border-white/20 placeholder-gray-400" />
+      <input type="email" placeholder="Email" id="guest-email" class="w-full p-3 rounded bg-white/10 text-white border border-white/20 placeholder-gray-400" />
+      <input type="tel" placeholder="Mobile Number" id="guest-mobile" class="w-full p-3 rounded bg-white/10 text-white border border-white/20 placeholder-gray-400" />
+      <button onclick="startGuestChat()" class="btn-glow w-full bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium hover:bg-white hover:text-black">
+        Start Chat
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat Interface Section -->
+  <div id="chat-interface" class="hidden w-full max-w-3xl mt-10 bg-white/5 backdrop-blur-lg rounded-xl overflow-hidden flex flex-col shadow-lg">
+    <div class="bg-white/10 text-center py-3 border-b border-white/10 text-xl font-bold tracking-widest">AIDLEX</div>
+    <div class="flex-1 p-4 overflow-y-auto space-y-4" id="chat-box">
+      <div class="text-gray-400 text-sm text-center">Chat started</div>
+    </div>
+    <div class="p-4 border-t border-white/10 flex">
+      <input id="chat-input" type="text" placeholder="Type your message..." class="flex-1 bg-transparent text-white border border-white/20 rounded-lg px-4 py-2 outline-none" />
+      <button onclick="sendMessage()" class="ml-2 px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-200">Send</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    function showGuestForm() {
+      document.getElementById("guest-button").classList.add("hidden");
+      document.getElementById("guest-form").classList.remove("hidden");
+    }
+
+    function startGuestChat() {
+      const name = document.getElementById("guest-name").value.trim();
+      const email = document.getElementById("guest-email").value.trim();
+      const mobile = document.getElementById("guest-mobile").value.trim();
+
+      if (!name || !email || !mobile) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      document.getElementById("guest-form").classList.add("hidden");
+      document.getElementById("welcome-section").classList.add("hidden");
+      document.getElementById("chat-interface").classList.remove("hidden");
+
+      addSystemMessage(`Welcome ${name}! Please choose how we can help you:`);
+      setTimeout(() => showLegalOptions(), 500);
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("chat-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      addUserMessage(message);
+      input.value = "";
+
+      fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.reply) {
+            addSystemMessage(data.reply);
+          } else {
+            addSystemMessage("No response received.");
+          }
+        })
+        .catch(() => {
+          addSystemMessage("Error contacting server.");
+        });
+    }
+
+    function addUserMessage(msg) {
+      const box = document.getElementById("chat-box");
+      const div = document.createElement("div");
+      div.className = "text-right";
+      div.innerHTML = `<div class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg max-w-[70%]">${msg}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function addSystemMessage(msg) {
+      const box = document.getElementById("chat-box");
+      const div = document.createElement("div");
+      div.className = "text-left";
+      div.innerHTML = `<div class="inline-block bg-white/10 text-white px-4 py-2 rounded-lg max-w-[70%]">${msg}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function showLegalOptions() {
+      const box = document.getElementById("chat-box");
+      const wrapper = document.createElement("div");
+      wrapper.className = "text-left space-y-2";
+
+      const options = [
+        "Request a legal document or memo",
+        "Get help with court filing or legal process",
+        "What should I do after a legal situation?",
+        "Which legal step should I take next?",
+        "Ask general legal questions",
+        "Contact our AIDLEX legal team",
+        "Translate legal documents to UAE official format",
+        "Upload legal document for translation and guidance"
+      ];
+
+      options.forEach((text) => {
+        const btn = document.createElement("button");
+        btn.className = "block w-full text-left bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20";
+        btn.innerText = text;
+        btn.onclick = () => {
+          addUserMessage(text);
+          fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.reply) addSystemMessage(data.reply);
+              else addSystemMessage("No response received.");
+            })
+            .catch(() => addSystemMessage("Server error."));
+          wrapper.remove();
+        };
+        wrapper.appendChild(btn);
+      });
+
+      box.appendChild(wrapper);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    tsParticles.load("tsparticles", {
+      background: { color: "#0f0f0f" },
+      particles: {
+        number: { value: 60 },
+        size: { value: 2 },
+        color: { value: "#ffffff" },
+        opacity: { value: 0.2 },
+        move: { enable: true, speed: 0.6 },
+        links: { enable: true, distance: 140, color: "#ffffff", opacity: 0.1 }
+      },
+      interactivity: {
+        events: { onhover: { enable: true, mode: "repulse" } }
+      },
+      fullScreen: { enable: false }
+    });
+  </script>
+</body>
+</html>
