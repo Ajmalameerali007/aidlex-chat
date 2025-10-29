@@ -6,94 +6,327 @@
   <title>AIDLEX</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js" integrity="sha512-GuRmqD1gqTFZUQsF90sCWVfPEMgs/8uth694ovVxKCwKrD8m4NRZX8cw1uTZHBouRCfsF1lT3Iv02Zb+5VXxWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
-    body {
-      background-color: #0f0f0f;
-      overflow: hidden;
-      font-family: 'Segoe UI', 'Roboto', sans-serif;
+    :root {
+      color-scheme: dark;
     }
+
+    body {
+      margin: 0;
+      background: radial-gradient(120% 120% at 50% 0%, #1b1b1b 0%, #050505 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      color: #f6f6f6;
+      overflow-x: hidden;
+    }
+
     .fade-scale {
       opacity: 0;
-      transform: scale(0.95);
-      animation: fadeInScale 1.5s ease-out forwards;
+      transform: translateY(20px);
+      animation: fadeInScale 1s ease-out forwards;
     }
+
     @keyframes fadeInScale {
       to {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0);
       }
     }
-    .glow {
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+
+    .panel {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 40px 120px rgba(15, 15, 15, 0.35);
     }
-    .btn-glow {
-      transition: all 0.3s ease;
+
+    .panel-dark {
+      background: rgba(6, 7, 9, 0.72);
     }
-    .btn-glow:hover {
-      background-color: white !important;
-      color: #0f0f0f !important;
-      transform: translateY(-2px);
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
-    }
+
     #chat-box {
       scroll-behavior: smooth;
     }
+
+    .floating-badge {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 9999px;
+      padding: 0.45rem 1rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .glass-btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .glass-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(255, 255, 255, 0.18);
+    }
+
+    .control-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.6rem;
+      width: 2.75rem;
+      height: 2.75rem;
+      background: rgba(255, 255, 255, 0.08);
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .control-btn.active {
+      background: #00c2ff;
+      color: #050505;
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 22px rgba(0, 194, 255, 0.35);
+    }
+
+    .attachment-chip {
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .attachment-chip button {
+      border: none;
+      background: transparent;
+      color: #f6f6f6;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .message-bubble {
+      max-width: min(520px, 80%);
+      padding: 0.95rem 1.2rem;
+      border-radius: 18px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .message-user {
+      background: linear-gradient(135deg, #1b7dff, #4fd1c5);
+    }
+
+    .message-system {
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    @media (max-width: 1024px) {
+      body {
+        overflow-y: auto;
+      }
+    }
   </style>
 </head>
-<body class="relative flex flex-col items-center justify-center min-h-screen text-white">
-  <!-- Particle Background -->
+<body class="relative">
   <div id="tsparticles" class="absolute inset-0 -z-10"></div>
 
-  <!-- Welcome Section -->
-  <div id="welcome-section" class="text-center fade-scale px-4">
-    <h1 class="text-5xl md:text-7xl font-extrabold glow tracking-widest">AIDLEX</h1>
-    <p class="mt-4 text-gray-400 text-base md:text-xl font-light">
-      AI-Powered Legal Intelligence
-    </p>
-    <!-- Login/Sign Up -->
-    <div class="mt-10">
-      <div class="flex justify-center gap-6 flex-wrap">
-        <a href="/login" class="btn-glow bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium text-base backdrop-blur hover:backdrop-blur-xl">Login</a>
-        <a href="/signup" class="btn-glow bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium text-base backdrop-blur hover:backdrop-blur-xl">Sign Up</a>
+  <div class="relative z-10 px-6 py-12 md:py-16">
+    <header class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div>
+        <div class="floating-badge mb-4 inline-flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Pro Intelligence Suite
+        </div>
+        <h1 class="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">
+          AIDLEX – AI-Powered UAE Legal Concierge
+        </h1>
+        <p class="mt-4 text-gray-300 max-w-2xl leading-relaxed">
+          Deliver precise guidance, crystal-clear documentation and real-time translation with a single platform built on the latest OpenAI legal intelligence. Enhanced with realistic narration and effortless voice capture for busy professionals.
+        </p>
       </div>
-      <!-- Continue as Guest Button -->
-      <div id="guest-button" class="mt-6">
-        <button onclick="showGuestForm()" class="btn-glow bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium text-base backdrop-blur hover:backdrop-blur-xl">
-          Continue as Guest
-        </button>
+      <nav class="flex items-center gap-3">
+        <a href="/login" class="glass-btn px-4 py-2 rounded-full border border-white/20 text-sm font-medium">Login</a>
+        <a href="/signup" class="glass-btn px-4 py-2 rounded-full border border-white/20 bg-white/10 text-sm font-medium">Sign Up</a>
+        <button id="close-chat" class="hidden glass-btn px-4 py-2 rounded-full border border-white/20 text-sm font-medium">Return to home</button>
+      </nav>
+    </header>
+
+    <main class="max-w-6xl mx-auto mt-12 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-start">
+      <section id="welcome-section" class="panel fade-scale p-8 md:p-10 space-y-8">
+        <div class="grid gap-6 lg:grid-cols-2 items-start">
+          <div class="space-y-5">
+            <h2 class="text-3xl font-semibold">Start in seconds – no congestion, just clarity</h2>
+            <p class="text-gray-200 leading-relaxed">
+              Select your access mode and the concierge adapts instantly with curated legal journeys, priority workflows and performance reporting. Upload files for rapid review or dictate notes when typing slows you down.
+            </p>
+            <ul class="space-y-3 text-sm text-gray-300">
+              <li class="flex items-start gap-3"><span class="mt-1 text-emerald-400">◆</span> Secure PDF, Word and image intake with automatic summaries for context-rich responses.</li>
+              <li class="flex items-start gap-3"><span class="mt-1 text-emerald-400">◆</span> Studio-grade female narration and instant speech-to-text capture for streamlined collaboration.</li>
+              <li class="flex items-start gap-3"><span class="mt-1 text-emerald-400">◆</span> Powered by fine-tuned OpenAI model <code class="text-xs bg-white/10 px-2 py-1 rounded-full">pmpt_68f61ae736f48190a0c63ad91c432bfa05a2f1c6b49bf03a</code> for precision.</li>
+            </ul>
+          </div>
+          <div class="panel-dark p-6 rounded-3xl space-y-6">
+            <div class="bg-emerald-400/10 border border-emerald-400/40 rounded-2xl p-4">
+              <p class="text-emerald-200 text-sm uppercase tracking-[0.2em]">Pro Tier Preview</p>
+              <p class="mt-3 text-lg font-semibold">Adaptive Legal Playbooks</p>
+              <p class="mt-2 text-sm text-gray-300">See recommended actions, compliance checkpoints and cross-border considerations before you make your next move.</p>
+            </div>
+            <div class="space-y-4">
+              <button onclick="showGuestForm()" id="guest-button" class="w-full glass-btn rounded-full px-6 py-3 text-base font-medium bg-white/10 border border-white/20">Continue as guest</button>
+              <form id="guest-form" class="hidden space-y-3">
+                <input type="text" placeholder="Full name" id="guest-name" class="w-full rounded-full bg-white/10 border border-white/20 px-5 py-3 text-sm placeholder:text-gray-400" />
+                <input type="email" placeholder="Email address" id="guest-email" class="w-full rounded-full bg-white/10 border border-white/20 px-5 py-3 text-sm placeholder:text-gray-400" />
+                <input type="tel" placeholder="Mobile number" id="guest-mobile" class="w-full rounded-full bg-white/10 border border-white/20 px-5 py-3 text-sm placeholder:text-gray-400" />
+                <button type="button" onclick="startGuestChat()" class="w-full rounded-full px-6 py-3 text-base font-medium bg-emerald-400 text-black hover:bg-emerald-300">Launch concierge</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel-dark p-8 rounded-3xl space-y-6">
+        <h3 class="text-xl font-semibold">Why professionals love AIDLEX</h3>
+        <ul class="space-y-4 text-sm text-gray-300">
+          <li><strong class="text-white">Context aware memory</strong><br />Upload multiple exhibits, affidavits and contracts – the assistant blends the insights into a single coherent brief.</li>
+          <li><strong class="text-white">Crystal voice delivery</strong><br />A premium, humanised female voice narrates every answer for on-the-go review.</li>
+          <li><strong class="text-white">Hands-free capture</strong><br />Record statements, meeting notes or incident details with automatic speech-to-text.</li>
+          <li><strong class="text-white">Executive clarity</strong><br />Wide-format layouts and deliberate spacing ensure zero clutter while you work.</li>
+        </ul>
+      </aside>
+    </main>
+
+    <section id="chat-interface" class="hidden max-w-6xl mx-auto mt-12">
+      <div class="panel p-6 md:p-8 space-y-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <p class="text-sm uppercase tracking-[0.3em] text-gray-300">Active concierge session</p>
+            <h2 class="text-2xl font-semibold">Priority workspace</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 text-sm text-gray-300">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>Fine-tuned intelligence</span>
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15">Voice control ready</span>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
+          <div class="panel-dark rounded-3xl flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <span class="text-sm uppercase tracking-[0.25em] text-gray-300">Conversation</span>
+              <div class="flex items-center gap-3">
+                <button id="speak-button" class="control-btn" title="Play last response" aria-label="Play last response">
+                  🔊
+                </button>
+                <button id="mic-button" class="control-btn" title="Toggle voice input" aria-label="Toggle voice input">
+                  🎙️
+                </button>
+              </div>
+            </div>
+
+            <div id="chat-box" class="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+              <div class="text-center text-sm text-gray-400">Session initiated • awaiting your question</div>
+            </div>
+
+            <div class="px-6 pt-4 pb-6 space-y-4 border-t border-white/10">
+              <div class="flex flex-wrap gap-3" id="attachment-preview"></div>
+              <label class="inline-flex items-center gap-3 text-sm text-gray-300 cursor-pointer">
+                <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.doc,.docx,.txt,.rtf,.md,.json,.jpg,.jpeg,.png,.heic,.csv" />
+                <span class="control-btn w-auto px-3 gap-2" aria-hidden="true">📁</span>
+                <span>Add files (PDF, DOCX, images)</span>
+              </label>
+              <div class="flex gap-3">
+                <input id="chat-input" type="text" placeholder="Ask your question or dictate using the mic..." class="flex-1 rounded-full bg-white/5 border border-white/15 px-5 py-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-emerald-300" />
+                <button id="send-button" class="rounded-full bg-emerald-400 text-black px-6 py-3 text-sm font-semibold hover:bg-emerald-300 transition-transform">Send</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="panel-dark rounded-3xl p-6 space-y-6 text-sm text-gray-300">
+            <div>
+              <h3 class="text-lg font-semibold text-white">Quick legal journeys</h3>
+              <div id="legal-options" class="mt-4 grid gap-3"></div>
+            </div>
+            <div class="border border-white/10 rounded-2xl p-4 space-y-3">
+              <h4 class="text-white text-sm uppercase tracking-[0.2em]">Session Health</h4>
+              <ul class="space-y-2 text-xs text-gray-400">
+                <li id="status-model">Model: pmpt_68f61ae736f48190a0c63ad91c432bfa05a2f1c6b49bf03a</li>
+                <li id="status-voice">Voice narration: ready</li>
+                <li id="status-input">Voice capture: idle</li>
+              </ul>
+            </div>
+            <div class="border border-white/10 rounded-2xl p-4 space-y-2">
+              <h4 class="text-white text-sm uppercase tracking-[0.2em]">Presentation tips</h4>
+              <p>Responses arrive with headings, bullet lists and highlight blocks for executive-ready clarity. Use “Summarise for court” or “Translate to Arabic” for tailored views.</p>
+            </div>
+          </aside>
+        </div>
       </div>
-    </div>
+    </section>
   </div>
 
-  <!-- Guest Form Section -->
-  <div id="guest-form" class="hidden mt-10 fade-scale w-full max-w-md px-6 text-white">
-    <div class="space-y-4">
-      <input type="text" placeholder="Full Name" id="guest-name" class="w-full p-3 rounded bg-white/10 text-white border border-white/20 placeholder-gray-400" />
-      <input type="email" placeholder="Email" id="guest-email" class="w-full p-3 rounded bg-white/10 text-white border border-white/20 placeholder-gray-400" />
-      <input type="tel" placeholder="Mobile Number" id="guest-mobile" class="w-full p-3 rounded bg-white/10 text-white border border-white/20 placeholder-gray-400" />
-      <button onclick="startGuestChat()" class="btn-glow w-full bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl font-medium hover:bg-white hover:text-black">
-        Start Chat
-      </button>
-    </div>
-  </div>
-
-  <!-- Chat Interface Section -->
-  <div id="chat-interface" class="hidden w-full max-w-3xl mt-10 bg-white/5 backdrop-blur-lg rounded-xl overflow-hidden flex flex-col shadow-lg">
-    <div class="bg-white/10 text-center py-3 border-b border-white/10 text-xl font-bold tracking-widest">AIDLEX</div>
-    <div class="flex-1 p-4 overflow-y-auto space-y-4" id="chat-box">
-      <div class="text-gray-400 text-sm text-center">Chat started</div>
-    </div>
-    <div class="p-4 border-t border-white/10 flex">
-      <input id="chat-input" type="text" placeholder="Type your message..." class="flex-1 bg-transparent text-white border border-white/20 rounded-lg px-4 py-2 outline-none" />
-      <button onclick="sendMessage()" class="ml-2 px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-200">Send</button>
-    </div>
-  </div>
-
-  <!-- Scripts -->
   <script>
+    const pdfWorker = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+    }
+
+    const legalOptions = [
+      "Request a bespoke contract, memo or policy",
+      "Outline the court filing process I should follow",
+      "Create a step-by-step plan after a legal incident",
+      "Which UAE legal step is the right next move?",
+      "Answer my general UAE legal question",
+      "Connect me with the AIDLEX legal team",
+      "Translate documents to UAE official formatting",
+      "Review an uploaded legal document and advise"
+    ];
+
+    const MAX_ATTACHMENT_PREVIEW = 4000;
+    let lastAssistantMessage = "";
+    let pendingAttachments = [];
+    let recognition = null;
+    let isListening = false;
+
+    const welcomeSection = document.getElementById("welcome-section");
+    const guestButton = document.getElementById("guest-button");
+    const guestForm = document.getElementById("guest-form");
+    const chatInterface = document.getElementById("chat-interface");
+    const chatBox = document.getElementById("chat-box");
+    const chatInput = document.getElementById("chat-input");
+    const sendButton = document.getElementById("send-button");
+    const micButton = document.getElementById("mic-button");
+    const speakButton = document.getElementById("speak-button");
+    const fileInput = document.getElementById("file-input");
+    const attachmentPreview = document.getElementById("attachment-preview");
+    const statusVoice = document.getElementById("status-voice");
+    const statusInput = document.getElementById("status-input");
+    const closeChatBtn = document.getElementById("close-chat");
+    const legalOptionsContainer = document.getElementById("legal-options");
+
+    legalOptions.forEach((option) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "text-left bg-white/5 border border-white/10 rounded-2xl px-4 py-3 hover:bg-white/10 transition";
+      button.textContent = option;
+      button.addEventListener("click", () => {
+        chatInput.value = option;
+        sendMessage();
+      });
+      legalOptionsContainer.appendChild(button);
+    });
+
     function showGuestForm() {
-      document.getElementById("guest-button").classList.add("hidden");
-      document.getElementById("guest-form").classList.remove("hidden");
+      guestButton?.classList.add("hidden");
+      guestForm?.classList.remove("hidden");
     }
 
     function startGuestChat() {
@@ -102,113 +335,299 @@
       const mobile = document.getElementById("guest-mobile").value.trim();
 
       if (!name || !email || !mobile) {
-        alert("Please fill all fields.");
+        alert("Please fill in your name, email and mobile number.");
         return;
       }
 
-      document.getElementById("guest-form").classList.add("hidden");
-      document.getElementById("welcome-section").classList.add("hidden");
-      document.getElementById("chat-interface").classList.remove("hidden");
+      guestForm?.classList.add("hidden");
+      welcomeSection?.classList.add("hidden");
+      chatInterface?.classList.remove("hidden");
+      closeChatBtn?.classList.remove("hidden");
 
-      addSystemMessage(`Welcome ${name}! Please choose how we can help you:`);
-      setTimeout(() => showLegalOptions(), 500);
+      addSystemMessage(`Welcome ${name}! Let me know how I can assist you today.`);
+      setTimeout(showLegalOptions, 350);
     }
 
-    function sendMessage() {
-      const input = document.getElementById("chat-input");
-      const message = input.value.trim();
-      if (!message) return;
-
-      addUserMessage(message);
-      input.value = "";
-
-      fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.reply) {
-            addSystemMessage(data.reply);
-          } else {
-            addSystemMessage("No response received.");
-          }
-        })
-        .catch(() => {
-          addSystemMessage("Error contacting server.");
-        });
+    function returnToWelcome() {
+      chatInterface?.classList.add("hidden");
+      welcomeSection?.classList.remove("hidden");
+      closeChatBtn?.classList.add("hidden");
+      chatBox.innerHTML = '<div class="text-center text-sm text-gray-400">Session reset • awaiting your question</div>';
+      pendingAttachments = [];
+      renderAttachments();
     }
+
+    closeChatBtn?.addEventListener("click", returnToWelcome);
 
     function addUserMessage(msg) {
-      const box = document.getElementById("chat-box");
-      const div = document.createElement("div");
-      div.className = "text-right";
-      div.innerHTML = `<div class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg max-w-[70%]">${msg}</div>`;
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
+      const wrapper = document.createElement("div");
+      wrapper.className = "flex justify-end";
+      wrapper.innerHTML = `<div class="message-bubble message-user">${msg}</div>`;
+      chatBox.appendChild(wrapper);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function addSystemMessage(msg) {
-      const box = document.getElementById("chat-box");
-      const div = document.createElement("div");
-      div.className = "text-left";
-      div.innerHTML = `<div class="inline-block bg-white/10 text-white px-4 py-2 rounded-lg max-w-[70%]">${msg}</div>`;
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
+      lastAssistantMessage = msg;
+      const wrapper = document.createElement("div");
+      wrapper.className = "flex justify-start";
+      wrapper.innerHTML = `<div class="message-bubble message-system">${msg}</div>`;
+      chatBox.appendChild(wrapper);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function showLegalOptions() {
-      const box = document.getElementById("chat-box");
       const wrapper = document.createElement("div");
-      wrapper.className = "text-left space-y-2";
+      wrapper.className = "space-y-2";
 
-      const options = [
-        "Request a legal document or memo",
-        "Get help with court filing or legal process",
-        "What should I do after a legal situation?",
-        "Which legal step should I take next?",
-        "Ask general legal questions",
-        "Contact our AIDLEX legal team",
-        "Translate legal documents to UAE official format",
-        "Upload legal document for translation and guidance"
-      ];
-
-      options.forEach((text) => {
-        const btn = document.createElement("button");
-        btn.className = "block w-full text-left bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20";
-        btn.innerText = text;
-        btn.onclick = () => {
-          addUserMessage(text);
-          fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text })
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.reply) addSystemMessage(data.reply);
-              else addSystemMessage("No response received.");
-            })
-            .catch(() => addSystemMessage("Server error."));
+      legalOptions.forEach((text) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "w-full text-left bg-white/5 border border-white/10 rounded-xl px-4 py-3 hover:bg-white/10 transition";
+        button.textContent = text;
+        button.addEventListener("click", () => {
+          chatInput.value = text;
+          sendMessage();
           wrapper.remove();
-        };
-        wrapper.appendChild(btn);
+        });
+        wrapper.appendChild(button);
       });
 
-      box.appendChild(wrapper);
-      box.scrollTop = box.scrollHeight;
+      chatBox.appendChild(wrapper);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    async function prepareAttachmentPreview(file) {
+      let preview = "";
+
+      if (!file) return { preview };
+
+      const isTextLike = file.type.startsWith("text/") || [
+        "application/json",
+        "application/xml",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword",
+        "application/rtf"
+      ].includes(file.type);
+
+      try {
+        if (file.type === "application/pdf" && window.pdfjsLib) {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const maxPages = Math.min(pdf.numPages, 5);
+          let textContent = "";
+          for (let i = 1; i <= maxPages && textContent.length < MAX_ATTACHMENT_PREVIEW; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items.map(item => item.str).join(" ");
+            textContent += "\n\n" + pageText;
+          }
+          preview = textContent.trim().slice(0, MAX_ATTACHMENT_PREVIEW);
+        } else if (isTextLike || file.type === "") {
+          const text = await file.text();
+          preview = text.slice(0, MAX_ATTACHMENT_PREVIEW);
+        }
+      } catch (err) {
+        console.warn("Failed to prepare attachment preview", err);
+      }
+
+      return { preview };
+    }
+
+    async function handleFiles(event) {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+
+      for (const file of files) {
+        const existing = pendingAttachments.find((item) => item.name === file.name && item.size === file.size);
+        if (existing) continue;
+
+        const { preview } = await prepareAttachmentPreview(file);
+        pendingAttachments.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          preview
+        });
+      }
+
+      renderAttachments();
+      fileInput.value = "";
+    }
+
+    function removeAttachment(index) {
+      pendingAttachments.splice(index, 1);
+      renderAttachments();
+    }
+
+    function renderAttachments() {
+      attachmentPreview.innerHTML = "";
+      if (!pendingAttachments.length) return;
+
+      pendingAttachments.forEach((attachment, index) => {
+        const chip = document.createElement("span");
+        chip.className = "attachment-chip";
+        chip.innerHTML = `${attachment.name || "Unnamed"} <button type="button" aria-label="Remove attachment">×</button>`;
+        chip.querySelector("button").addEventListener("click", () => removeAttachment(index));
+        attachmentPreview.appendChild(chip);
+      });
+    }
+
+    async function sendMessage() {
+      const message = chatInput.value.trim();
+      if (!message && pendingAttachments.length === 0) {
+        chatInput.focus();
+        return;
+      }
+
+      if (message) {
+        addUserMessage(message);
+      }
+
+      const payload = {
+        message: message || "Please review the attached materials.",
+        attachments: pendingAttachments
+      };
+
+      chatInput.value = "";
+      sendButton.disabled = true;
+      sendButton.textContent = "Sending...";
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (response.ok && data.reply) {
+          addSystemMessage(data.reply);
+        } else {
+          throw new Error(data.error || "No response received");
+        }
+      } catch (error) {
+        console.error(error);
+        addSystemMessage("I couldn't connect to the intelligence engine. Please try again in a moment.");
+      } finally {
+        pendingAttachments = [];
+        renderAttachments();
+        sendButton.disabled = false;
+        sendButton.textContent = "Send";
+      }
+    }
+
+    function speakLatestResponse() {
+      if (!lastAssistantMessage) {
+        statusVoice.textContent = "Voice narration: no response yet";
+        return;
+      }
+
+      if (!("speechSynthesis" in window)) {
+        alert("Speech synthesis is not supported in this browser.");
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(lastAssistantMessage);
+      utterance.pitch = 1.02;
+      utterance.rate = 1.02;
+
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find((voice) => /female|woman|zarah|samantha|karen|eva/i.test(voice.name))
+        || voices.find((voice) => voice.lang.startsWith("en"));
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+
+      statusVoice.textContent = `Voice narration: playing ${preferredVoice ? preferredVoice.name : "default"}`;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        statusInput.textContent = "Voice capture: unavailable";
+        micButton.disabled = true;
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      recognition.addEventListener("start", () => {
+        isListening = true;
+        micButton.classList.add("active");
+        statusInput.textContent = "Voice capture: listening";
+      });
+
+      recognition.addEventListener("end", () => {
+        isListening = false;
+        micButton.classList.remove("active");
+        statusInput.textContent = "Voice capture: idle";
+      });
+
+      recognition.addEventListener("result", (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join(" ");
+        chatInput.value = transcript;
+      });
+
+      recognition.addEventListener("error", (event) => {
+        console.error("Speech recognition error", event);
+        statusInput.textContent = "Voice capture: error";
+      });
+    }
+
+    function toggleListening() {
+      if (!recognition) {
+        statusInput.textContent = "Voice capture: unsupported";
+        return;
+      }
+
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+    chatInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    fileInput.addEventListener("change", handleFiles);
+    micButton.addEventListener("click", toggleListening);
+    speakButton.addEventListener("click", speakLatestResponse);
+
+    window.addEventListener("load", () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          statusVoice.textContent = "Voice narration: ready";
+        };
+      } else {
+        statusVoice.textContent = "Voice narration: unavailable";
+      }
+      initSpeechRecognition();
+    });
+
     tsParticles.load("tsparticles", {
-      background: { color: "#0f0f0f" },
+      background: { color: "#050505" },
       particles: {
-        number: { value: 60 },
-        size: { value: 2 },
+        number: { value: 40 },
+        size: { value: 2.5 },
         color: { value: "#ffffff" },
-        opacity: { value: 0.2 },
-        move: { enable: true, speed: 0.6 },
-        links: { enable: true, distance: 140, color: "#ffffff", opacity: 0.1 }
+        opacity: { value: 0.22 },
+        move: { enable: true, speed: 0.4 },
+        links: { enable: true, distance: 160, color: "#56ffe1", opacity: 0.18 }
       },
       interactivity: {
         events: { onhover: { enable: true, mode: "repulse" } }
